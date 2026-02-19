@@ -1,32 +1,33 @@
-name: Build LaTeX Documents
+name: Build and Release LaTeX Documents
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags: ['v*']
 
 jobs:
-  build-proposal:
+  release:
     runs-on: tex
     steps:
+      - name: Install Node.js 20
+        run: |
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -y nodejs
       - uses: https://code.forgejo.org/actions/checkout@v4
-      - name: Build proposal
-        run: make -C proposal
-      - name: Upload proposal PDF
-        uses: https://code.forgejo.org/actions/upload-artifact@v3
+      - name: Build all documents
+        run: |
+          make -C proposal
+          make -C slides
+      - name: Collect PDFs
+        run: |
+          mkdir -p dist/release
+          cp proposal/out/proposal.pdf dist/release/
+          cp slides/out/slide.pdf dist/release/
+      - name: Create release
+        uses: https://code.forgejo.org/actions/forgejo-release@v2
         with:
-          name: proposal
-          path: proposal/out/proposal.pdf
-
-  build-slides:
-    runs-on: tex
-    steps:
-      - uses: https://code.forgejo.org/actions/checkout@v4
-      - name: Build slides
-        run: make -C slides
-      - name: Upload slides PDF
-        uses: https://code.forgejo.org/actions/upload-artifact@v3
-        with:
-          name: slides
-          path: slides/out/slide.pdf
+          direction: upload
+          release-dir: dist/release
+          release-notes: "Compiled LaTeX documents"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          override: true
