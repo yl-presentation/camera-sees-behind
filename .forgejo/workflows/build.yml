@@ -1,0 +1,32 @@
+name: Build LaTeX Documents
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-proposal:
+    runs-on: tex
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v4
+      - name: Build proposal
+        run: make -C proposal
+      - name: Upload proposal PDF
+        uses: https://code.forgejo.org/actions/upload-artifact@v3
+        with:
+          name: proposal
+          path: proposal/out/proposal.pdf
+
+  build-slides:
+    runs-on: tex
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v4
+      - name: Build slides
+        run: make -C slides
+      - name: Upload slides PDF
+        uses: https://code.forgejo.org/actions/upload-artifact@v3
+        with:
+          name: slides
+          path: slides/out/slide.pdf
