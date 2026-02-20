@@ -1,0 +1,35 @@
+name: Build and Release LaTeX Documents
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/xu-cheng/texlive-full:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build all documents
+        run: |
+          make -C proposal
+          make -C slides
+
+      - name: Collect PDFs
+        run: |
+          mkdir -p dist/release
+          cp proposal/out/proposal.pdf dist/release/
+          cp slides/out/slide.pdf dist/release/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/release/proposal.pdf
+            dist/release/slide.pdf
+          body: "Compiled LaTeX documents"
